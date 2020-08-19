@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <group ns="X4">
+    <arg name="filename" default="default.bag"/>
+    <node pkg="test_sim" type="monitor" name="test_monitor">
+      <param name="rate" value="0.2" />
+      <param name="map_size_limit" value="1000" />
+      <!-- <remap from="octomap_binary" to="" /> -->
+      <!-- <remap from="odometry" to="" /> -->
+    </node>
+  </group>
+</launch>

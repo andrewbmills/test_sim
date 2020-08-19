@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="filename_map" default="default"/>
+  <arg name="filename_poses" default="default"/>
+  <arg name="filename" default="default"/>
+  <!-- Launch bag listener  -->
+  <group ns="X4">
+    <node pkg="test_sim" type="save_test_data" name="save_test_data" output="screen" required="true">
+      <param name="rate" value="1.0" />
+      <param name="filename_map" value="/home/andrew/tests/data/$(arg filename_map).csv" />
+      <param name="filename_poses" value="/home/andrew/tests/data/$(arg filename_poses).csv" />
+    </node>
+  </group>
+  <!-- Launch bag node -->
+  <node pkg="rosbag" type="play" name="rosbag_play_test" output="screen" args="/home/andrew/tests/data/bags/$(arg filename).bag"/>
+</launch>
