@@ -6,11 +6,12 @@
   <!-- Launch bag listener  -->
   <group ns="X4">
     <node pkg="test_sim" type="save_test_data" name="save_test_data" output="screen" required="true">
-      <param name="rate" value="1.0" />
+      <param name="rate" value="2.0" />
       <param name="filename_map" value="/home/andrew/tests/data/$(arg filename_map).csv" />
       <param name="filename_poses" value="/home/andrew/tests/data/$(arg filename_poses).csv" />
+      <remap from="map_cloud" to="voxblox_node/esdf_pointcloud_throttle"/>
     </node>
   </group>
   <!-- Launch bag node -->
-  <node pkg="rosbag" type="play" name="rosbag_play_test" output="screen" args="/home/andrew/tests/data/bags/$(arg filename).bag"/>
+  <node pkg="rosbag" type="play" name="rosbag_play_test" args="/home/andrew/tests/data/bags/frontier_only_urban_gz9/$(arg filename).bag"/>
 </launch>

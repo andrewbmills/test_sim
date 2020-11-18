@@ -12,10 +12,13 @@
 #include <octomap/ColorOcTree.h>
 #include <octomap_msgs/Octomap.h>
 #include <octomap_msgs/conversions.h>
+// PCL libraries
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 struct MapStats
 {
-  double voxel_size = 0.0;
   int free_count = 0;
   int occupied_count = 0;
   int unseen_count = 0;
@@ -23,7 +26,6 @@ struct MapStats
 
 MapStats GetMapStats(octomap::OcTree* map) {
   MapStats stats;
-  stats.voxel_size = map->getResolution();
   // Expand pruned nodes in octree
   map->expand();
   // Iterate through expanded octree
@@ -48,6 +50,25 @@ MapStats GetMapStats(octomap::OcTree* map) {
   return stats;
 }
 
+MapStats GetMapStats(pcl::PointCloud<pcl::PointXYZI>::Ptr map) {
+  MapStats stats;
+  // Iterate through expanded octree
+  for(int i=0; i<map->points.size(); i++) {
+    pcl::PointXYZI p = map->points[i];
+    if ((p.intensity <= 0.19) && (p.intensity >=-0.19))
+    {
+      // Add to occupied count
+      stats.occupied_count++;
+    }
+    else if (p.intensity > 0.19)
+    {
+      // Add to free count
+      stats.free_count++;
+    }
+  }
+  return stats;
+}
+
 class NodeManager
 {
   public:
@@ -63,6 +84,7 @@ class NodeManager
       bool received_odometry = false;
       std::time_t last_map_time;
       std::time_t last_odometry_time;
+      double begin_time = -1.0;
 
       // Map
       octomap::OcTree* map_octree;
@@ -74,7 +96,8 @@ class NodeManager
     // Method Definitions
     void CallbackOctomap(const octomap_msgs::Octomap::ConstPtr msg);
     void CallbackOdometry(const nav_msgs::Odometry msg);
-    bool WriteHistoryToCSV(std::string filename_map, std::string filename_poses);
+    void CallbackPointCloud(const sensor_msgs::PointCloud2::ConstPtr msg);
+    bool WriteHistoryToCSV(std::string filename_map, std::string filename_poses, float voxel_size);
 };
 
 void NodeManager::CallbackOctomap(const octomap_msgs::Octomap::ConstPtr msg)
@@ -96,7 +119,19 @@ void NodeManager::CallbackOdometry(const nav_msgs::Odometry msg)
   return;
 }
 
-bool NodeManager::WriteHistoryToCSV(std::string filename_poses, std::string filename_map)
+void NodeManager::CallbackPointCloud(const sensor_msgs::PointCloud2::ConstPtr msg)
+{
+  if (msg->data.size() == 0) return;
+  if (received_map == false) received_map = true;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZI>);
+  pcl::fromROSMsg(*msg, *cloud);
+  if (begin_time < 0.0) begin_time = ros::Time::now().toSec();
+  maps_stats_history.push_back(std::make_pair(ros::Time::now().toSec() - begin_time, GetMapStats(cloud)));
+  last_map_time = std::time(NULL);
+  return;
+}
+
+bool NodeManager::WriteHistoryToCSV(std::string filename_poses, std::string filename_map, float voxel_size)
 {
   // Write pose data to file
   std::ofstream f;
@@ -126,7 +161,7 @@ bool NodeManager::WriteHistoryToCSV(std::string filename_poses, std::string file
 
   // Write map data to file
   f.open(filename_map, std::ios::out);
-  f << maps_stats_history[0].second.voxel_size;
+  f << voxel_size;
   f << "\n";
   if (f.is_open()) {
     for (int i=0; i<maps_stats_history.size(); i++) {
@@ -156,18 +191,21 @@ int main(int argc, char **argv)
   // Declare subscribers for the camera info and the raw depth image.  Use the image truncator callbacks
   ros::Subscriber sub1 = n.subscribe("octomap_full", 1, &NodeManager::CallbackOctomap, &save_data_node);
   ros::Subscriber sub2 = n.subscribe("odometry", 1, &NodeManager::CallbackOdometry, &save_data_node);
+  ros::Subscriber sub3 = n.subscribe("map_cloud", 1, &NodeManager::CallbackPointCloud, &save_data_node);
   // ros::Subscriber sub3 = n.subscribe("planned_path", 1, &NodeManager::CallbackPath, &save_data_node);
   // ros::Subscriber sub4 = n.subscribe("planning_time", 1, &NodeManager::CallbackPlanningTime, &save_data_node);
 
   // Get filename params
   std::string filename_poses;
   std::string filename_map;
+  float voxel_size;
   n.param<std::string>("save_test_data/filename_poses", filename_poses, "/home/andrew/tests/data/default_pose_data.csv");
   n.param<std::string>("save_test_data/filename_map", filename_map, "/home/andrew/tests/data/default_map_data.csv");
+  n.param("save_test_data/voxel_size", voxel_size, (float)0.2);
   
   // Write to file stopping criteria
   float timeout;
-  n.param("save_test_data/timeout", timeout, (float)3.0);
+  n.param("save_test_data/timeout", timeout, (float)5.0);
 
   // Declare and read in the node update rate from the launch file parameters
   double rate;
@@ -187,7 +225,7 @@ int main(int argc, char **argv)
   }
 
   // Write histories to file when core dies (not sure if this works as intended)
-  if (save_data_node.WriteHistoryToCSV(filename_poses, filename_map)) {
+  if (save_data_node.WriteHistoryToCSV(filename_poses, filename_map, voxel_size)) {
     ROS_INFO("Data written to file.");
   }
   else
