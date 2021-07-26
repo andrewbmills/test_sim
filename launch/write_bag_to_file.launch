@@ -3,15 +3,20 @@
   <arg name="filename_map" default="default"/>
   <arg name="filename_poses" default="default"/>
   <arg name="filename" default="default"/>
+  <!-- <arg name="path" default="/home/andrew/tests/data"/> -->
+  <arg name="path" default="/home/andrew/Documents/IROS_planning_paper"/>
   <!-- Launch bag listener  -->
-  <group ns="X4">
+  <!-- <group ns="X4"> -->
     <node pkg="test_sim" type="save_test_data" name="save_test_data" output="screen" required="true">
       <param name="rate" value="2.0" />
-      <param name="filename_map" value="/home/andrew/tests/data/$(arg filename_map).csv" />
-      <param name="filename_poses" value="/home/andrew/tests/data/$(arg filename_poses).csv" />
-      <remap from="map_cloud" to="voxblox_node/esdf_pointcloud_throttle"/>
+      <param name="filename_map" value="$(arg path)/$(arg filename_map).csv" />
+      <param name="filename_poses" value="$(arg path)/$(arg filename_poses).csv" />
+      <!-- <remap from="map_cloud" to="voxblox_node/esdf_pointcloud_throttle"/> -->
+      <remap from="odometry" to="B01/odometry"/>
+      <remap from="octomap_binary" to="post_processed/octomap_binary"/>
     </node>
-  </group>
+  <!-- </group> -->
   <!-- Launch bag node -->
-  <node pkg="rosbag" type="play" name="rosbag_play_test" args="/home/andrew/tests/data/bags/frontier_only_urban_gz9/$(arg filename).bag"/>
+  <!-- <node pkg="rosbag" type="play" name="rosbag_play_test" args="/home/andrew/tests/data/bags/frontier_only_urban_gz9/$(arg filename).bag"/> -->
+  <node pkg="rosbag" type="play" name="rosbag_play_test" args="/home/andrew/Documents/IROS_planning_paper/$(arg filename).bag"/>
 </launch>

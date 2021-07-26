@@ -1,6 +1,6 @@
 <package format="2">
 	<name>test_sim</name>
-	<version>0.1.0</version>version
+	<version>0.1.0</version>
 	<description>
 		This package monitors simulation status for stopping criteria and contains launch files for recording bag data.
 	</description>

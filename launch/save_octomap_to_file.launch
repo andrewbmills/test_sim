@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="filename" default="octomap_urban_practice_0.ot"/>
+  <arg name="path" default="/home/andrew/Desktop/octomaps"/>
+  <node pkg="test_sim" type="save_octomap_to_file" name="save_octomap_to_file" output="screen">
+    <param name="filename" value="$(arg path)/$(arg filename)" />
+    <remap from="octomap_binary" to="X1/octomap_binary_throttle"/>
+  </node>
+</launch>

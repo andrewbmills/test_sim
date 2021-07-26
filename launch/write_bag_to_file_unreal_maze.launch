@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="filename" default="default"/>
+  <arg name="path" default="/home/andrew/data/unreal_maze"/>
+  <!-- Launch bag listener  -->
+    <node pkg="test_sim" type="save_test_data" name="save_test_data" output="screen" required="true">
+        <param name="rate" value="2.0" />
+        <param name="filename_map" value="$(arg path)/$(arg filename)_map.csv" />
+        <param name="filename_poses" value="$(arg path)/$(arg filename)_poses.csv" />
+        <param name="filter_by_bbox" value="true"/>
+        <param name="bbox_min_x" value = "-20.0"/>
+        <param name="bbox_max_x" value = "20.0"/>
+        <param name="bbox_min_y" value = "-20.0"/>
+        <param name="bbox_max_y" value = "20.0"/>
+        <param name="bbox_min_z" value = "-1.5"/>
+        <param name="bbox_max_z" value = "1.5"/>
+        <!-- <remap from="map_cloud" to="/firefly/edt_filtered_throttle"/> -->
+        <remap from="odometry" to="/firefly/ground_truth/odometry_throttle"/>
+        <remap from="octomap_binary" to="/firefly/octomap_binary_throttle"/>
+    </node>
+
+  <!-- Launch bag node -->
+  <node pkg="rosbag" type="play" name="rosbag_play_test" args="$(arg path)/$(arg filename).bag -r 6"/>
+</launch>

@@ -39,3 +39,9 @@ add_executable(save_test_data src/save_test_data.cpp)
 target_link_libraries(save_test_data
   ${catkin_LIBRARIES}
 )
+
+add_executable(save_octomap_to_file src/save_octomap_to_file.cpp)
+
+target_link_libraries(save_octomap_to_file
+  ${catkin_LIBRARIES}
+)

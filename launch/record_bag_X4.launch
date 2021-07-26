@@ -6,22 +6,22 @@
     <!-- Throttle large topics -->
     <node pkg="topic_tools" type="throttle" name="octomap_binary_throttle" args="messages /$(arg model)/octomap_binary 0.25"/>
     <node pkg="topic_tools" type="throttle" name="octomap_full_throttle" args="messages /$(arg model)/octomap_full 0.25"/>
-    <node pkg="topic_tools" type="throttle" name="edt_throttle" args="messages /$(arg model)/edt_filtered 0.25"/>
+    <node pkg="topic_tools" type="throttle" name="edt_throttle" args="messages /$(arg model)/edt 0.25"/>
     <node pkg="topic_tools" type="throttle" name="odometry_throttle" args="messages /$(arg model)/odometry 10.0"/>
     <node pkg="topic_tools" type="throttle" name="ground_truth_odometry_throttle" args="messages /$(arg model)/ground_truth/odometry 10.0"/>
     <node pkg="topic_tools" type="throttle" name="reach_throttle" args="messages /$(arg model)/frontier 0.25"/>
+    <node pkg="topic_tools" type="throttle" name="position_throttle" args="messages /$(arg model)/ground_truth/position 10.0"/>
     
     <!-- Launch bag recorder node -->
     <node pkg="rosbag" type="record" name="rosbag_record_test" output="screen" args="-O $(arg path)/$(arg filename).bag
         /tf 
         /tf_static 
-        /clock 
         /$(arg model)/octomap_binary_throttle 
         /$(arg model)/octomap_full_throttle 
         /$(arg model)/odometry_throttle 
         /$(arg model)/ground_truth/odometry_throttle 
         /$(arg model)/ground_truth/position_throttle 
-        /$(arg model)/edt_filtered_throttle 
+        /$(arg model)/edt_throttle 
         /$(arg model)/planned_path 
         /$(arg model)/reach_grid_throttle 
         /$(arg model)/frontier_throttle 
