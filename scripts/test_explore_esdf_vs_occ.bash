@@ -14,35 +14,26 @@ ALGO_IFVE_IROS="ifve_iros"
 # Read in all the tests from some file
 # Each test needs a test environment, vehicle model, an algorithm name, and a number of runs
 
-# TEST_ENV="subway"
-TEST_ENV="truss_bridge"
+TEST_ENV="subway"
+# TEST_ENV="truss_bridge"
 TEST_MODEL="X4"
 TEST_ALGO="complex_frontier"
-TEST_RUNS=1
+TEST_RUNS=7
 UTILITY_FUNCTION="efficiency"
 UTILITY_PARAM=1.0
 GAIN="unseen"
 
-TEST_PATH="/home/andrew/tests/data/${TEST_ENV}"
+TEST_PATH="/home/andrew/tests/data/esdf_truncation/${TEST_ENV}"
+TRUNCATION_SPEEDS=(1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0)
 
-# UTILITY_FUNCTIONS=("exponential" "linear")
-# UTILITY_PARAMS=(10.0 50.0 100.0 200.0 500.0 1000.0)
-# UTILITY_PARAMS=(50.0 2.0 100.0 0.1)
-# UTILITY_FUNCTIONS=("linear" "exponential" "linear" "exponential")
-# IDS=(1 1 2 0)
-# for ((k=0; k<2; k++)); do
-#   UTILITY_FUNCTION=UTILITY_FUNCTIONS[k]
-# for ((j=0; j<6; j++)); do
-  # UTILITY_PARAM=${UTILITY_PARAMS[j]}
-  for ((i=0; i<$TEST_RUNS; i++)); do
+for ((j=3; j<4; j++)); do
+  TRUNCATION_SPEED=${TRUNCATION_SPEEDS[j]}
+  for ((i=3; i<$TEST_RUNS; i++)); do
     roscore &>/dev/null &
     sleep 2
-    # UTILITY_FUNCTION=${UTILITY_FUNCTIONS[i]}
-    # UTILITY_PARAM=${UTILITY_PARAMS[i]}
     # Test params
-    # TEST_NAME="test${i}"
-    TEST_NAME="test${IDS[i]}"
-    TEST_FILENAME="${TEST_ENV}_${TEST_ALGO}_${TEST_NAME}_${UTILITY_FUNCTION}_${UTILITY_PARAM}_${GAIN}"
+    TEST_NAME="test${i}"
+    TEST_FILENAME="${TEST_ENV}_${TEST_ALGO}_${TEST_NAME}_esdf_max_${TRUNCATION_SPEED}"
 
     # Launch the simulator
     if [[ "$TEST_ENV" == "$ENV_MAZE" ]]; then
@@ -102,23 +93,23 @@ TEST_PATH="/home/andrew/tests/data/${TEST_ENV}"
     # Launch planning and control
     if [[ "$TEST_ALGO" == "$ALGO_COMPLEX_FRONTIER" ]]; then
       if [[ "$TEST_ENV" == "$ENV_MAZE" ]]; then
-        roslaunch msfm3d frontier_planner_unreal_maze.launch &>/dev/null &
+        roslaunch msfm3d frontier_planner_unreal_maze.launch speed_map_max:=$TRUNCATION_SPEED &>/dev/null &
       elif [[ "$TEST_ENV" == "$ENV_SUBWAY" ]]; then
-        roslaunch msfm3d frontier_planner_subway_evaluation.launch &
+        roslaunch msfm3d frontier_planner_subway_evaluation.launch speed_map_max:=$TRUNCATION_SPEED &
       elif [[ "$TEST_ENV" == "$ENV_POWERPLANT" ]]; then
-        roslaunch msfm3d frontier_planner_powerplant.launch model_name:=$TEST_MODEL &
+        roslaunch msfm3d frontier_planner_powerplant.launch model_name:=$TEST_MODEL speed_map_max:=$TRUNCATION_SPEED &
       elif [[ "$TEST_ENV" == "$ENV_BRIDGE" ]]; then
-        roslaunch msfm3d frontier_planner_truss_bridge.launch &
+        roslaunch msfm3d frontier_planner_truss_bridge.launch speed_map_max:=$TRUNCATION_SPEED &
       fi
     elif [[ "$TEST_ALGO" == "$ALGO_IFVE" ]]; then
       if [[ "$TEST_ENV" == "$ENV_MAZE" ]]; then
-        roslaunch msfm3d goal_pose_planner_unreal_maze.launch &
+        roslaunch msfm3d goal_pose_planner_unreal_maze.launch speed_map_max:=$TRUNCATION_SPEED &
       elif [[ "$TEST_ENV" == "$ENV_SUBWAY" ]]; then
-        roslaunch msfm3d goal_pose_planner_subway_evaluation.launch utility_function:=$UTILITY_FUNCTION utility_param:=$UTILITY_PARAM gain_function:=$GAIN &
+        roslaunch msfm3d goal_pose_planner_subway_evaluation.launch utility_function:=$UTILITY_FUNCTION utility_param:=$UTILITY_PARAM gain_function:=$GAIN speed_map_max:=$TRUNCATION_SPEED &
       elif [[ "$TEST_ENV" == "$ENV_POWERPLANT" ]]; then
-        roslaunch msfm3d goal_pose_planner_powerplant.launch &
+        roslaunch msfm3d goal_pose_planner_powerplant.launch speed_map_max:=$TRUNCATION_SPEED &
       elif [[ "$TEST_ENV" == "$ENV_BRIDGE" ]]; then
-        roslaunch msfm3d goal_pose_planner_truss_bridge.launch utility_function:=$UTILITY_FUNCTION utility_param:=$UTILITY_PARAM gain_function:=$GAIN &
+        roslaunch msfm3d goal_pose_planner_truss_bridge.launch utility_function:=$UTILITY_FUNCTION utility_param:=$UTILITY_PARAM gain_function:=$GAIN speed_map_max:=$TRUNCATION_SPEED &
       fi
     elif [[ "$TEST_ALGO" == "$ALGO_IFVE_IROS" ]]; then
       if [[ "$TEST_ENV" == "$ENV_MAZE" ]]; then
@@ -129,7 +120,7 @@ TEST_PATH="/home/andrew/tests/data/${TEST_ENV}"
     fi
     PLAN_ID=$!
 
-    sleep 210
+    sleep 600
     kill $PLAN_ID
     kill $ROSBAG_ID
     kill $RVIZ_ID
